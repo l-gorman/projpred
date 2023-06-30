@@ -173,10 +173,12 @@ cv_varsel.refmodel <- function(
   }
 
   refmodel <- object
+  nterms_all <- count_terms_in_formula(refmodel$formula) - 1L
   # Parse arguments which also exist in varsel():
   args <- parse_args_varsel(
     refmodel = refmodel, method = method, refit_prj = refit_prj,
-    nterms_max = nterms_max, nclusters = nclusters, search_terms = search_terms
+    nterms_max = nterms_max, nclusters = nclusters, search_terms = search_terms,
+    nterms_all = nterms_all
   )
   method <- args$method
   refit_prj <- args$refit_prj
@@ -260,7 +262,7 @@ cv_varsel.refmodel <- function(
               y_wobs_test,
               nobs_test = nrow(y_wobs_test),
               summaries = sel_cv$summaries,
-              nterms_all = count_terms_in_formula(refmodel$formula) - 1L,
+              nterms_all,
               nterms_max,
               method,
               cv_method,
@@ -336,7 +338,7 @@ loo_varsel <- function(refmodel, method, nterms_max, ndraws,
                        nclusters, ndraws_pred, nclusters_pred, refit_prj,
                        penalty, verbose, opt, nloo, validate_search,
                        search_terms, parallel, ...) {
-  # Pre-processing ----------------------------------------------------------
+  ## Pre-processing ---------------------------------------------------------
 
   # Clustering or thinning for the search (note that in case of
   # `validate_search = TRUE`, only `cl_sel` is used later, not `p_sel` itself):
@@ -462,7 +464,7 @@ loo_varsel <- function(refmodel, method, nterms_max, ndraws,
   }
 
   if (!validate_search) {
-    # Case `validate_search = FALSE` ------------------------------------------
+    ## Case `validate_search = FALSE` -----------------------------------------
 
     verb_out("-----\nRunning the search using the full dataset ...",
              verbose = verbose)
@@ -591,7 +593,7 @@ loo_varsel <- function(refmodel, method, nterms_max, ndraws,
     }
     verb_out("-----", verbose = verbose)
   } else {
-    # Case `validate_search = TRUE` -------------------------------------------
+    ## Case `validate_search = TRUE` ------------------------------------------
 
     verb_out("-----\nRunning the search and the performance evaluation for ",
              "each of the N = ", nloo, " LOO CV folds separately ...",
@@ -717,7 +719,7 @@ loo_varsel <- function(refmodel, method, nterms_max, ndraws,
     verb_out("-----", verbose = verbose)
   }
 
-  # Post-processing ---------------------------------------------------------
+  ## Post-processing --------------------------------------------------------
 
   # Submodel predictive performance:
   summ_sub <- lapply(seq_len(nterms_max + 1L), function(k) {
@@ -961,8 +963,17 @@ kfold_varsel <- function(refmodel, method, nterms_max, ndraws,
   solution_terms_cv <- do.call(rbind, lapply(res_cv, "[[", "predictor_ranking"))
 
   # Handle the submodels' performance evaluation results:
-  sub_foldwise <- simplify2array(lapply(res_cv, "[[", "summaries_sub"),
-                                 higher = FALSE, except=NULL)
+  sub_foldwise <- lapply(res_cv, "[[", "summaries_sub")
+  if (getRversion() >= package_version("4.2.0")) {
+    sub_foldwise <- simplify2array(sub_foldwise, higher = FALSE, except = NULL)
+  } else {
+    sub_foldwise <- simplify2array(sub_foldwise, higher = FALSE)
+    if (is.null(dim(sub_foldwise))) {
+      sub_dim <- dim(solution_terms_cv)
+      sub_dim[2] <- sub_dim[2] + 1L # +1 is for the empty model
+      dim(sub_foldwise) <- rev(sub_dim)
+    }
+  }
   sub <- apply(sub_foldwise, 1, rbind2list)
   idxs_sorted_by_fold <- unlist(lapply(list_cv, function(fold) {
     fold$omitted

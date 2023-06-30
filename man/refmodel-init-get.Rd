@@ -33,6 +33,7 @@ init_refmodel(
   cvfits = NULL,
   dis = NULL,
   cvrefbuilder = NULL,
+  called_from_cvrefbuilder = FALSE,
   ...
 )
 }
@@ -70,7 +71,10 @@ used for quantities like predictions and fitted values related to the
 case the family is retrieved from \code{object}. For custom reference models,
 \code{family} does not have to coincide with the family of the reference model
 (if the reference model possesses a formal \code{family} at all). In typical
-reference models, however, these families do coincide.}
+reference models, however, these families do coincide. Furthermore, the
+latent projection is an exception where \code{family} is not the family of the
+submodels (in that case, the family of the submodels is the \code{\link[=gaussian]{gaussian()}}
+family).}
 
 \item{latent}{A single logical value indicating whether to use the latent
 projection (\code{TRUE}) or not (\code{FALSE}). Note that setting \code{latent = TRUE}
@@ -143,6 +147,14 @@ same type as \code{\link[=init_refmodel]{init_refmodel()}} does. Argument \code{
 for using an internal default: \code{\link[=get_refmodel]{get_refmodel()}} if \code{object} is not \code{NULL}
 and a function calling \code{\link[=init_refmodel]{init_refmodel()}} appropriately (with the assumption
 \code{dis = 0}) if \code{object} is \code{NULL}.}
+
+\item{called_from_cvrefbuilder}{A single logical value indicating whether
+\code{\link[=init_refmodel]{init_refmodel()}} is called from a \code{cvrefbuilder} function (\code{TRUE}) or not
+(\code{FALSE}). Currently, \code{TRUE} only causes some warnings to be suppressed
+(warnings which don't need to be thrown for each of the \eqn{K} reference
+model objects because it is sufficient to throw them for the original
+reference model object only). This argument is mainly for internal use, but
+may also be helpful for users with a custom \code{cvrefbuilder} function.}
 }
 \value{
 An object that can be passed to all the functions that take the

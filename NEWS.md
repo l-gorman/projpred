@@ -9,11 +9,17 @@ If you read this from a place other than <https://mc-stan.org/projpred/news/inde
 * If an L1 search selects an interaction term before all involved lower-order interaction terms (including main-effect terms) have been selected, the predictor ranking is now automatically modified so that the lower-order interaction terms come before this interaction term. A corresponding warning is thrown, which may be deactivated by setting the global option `projpred.warn_L1_interactions` to `FALSE`. Previously, beginning with version 2.5.0, only a warning was thrown and this only if an L1 search selected an interaction term before all involved *main-effect* terms had been selected. (GitHub: #420)
 * Added a progress bar for `project()` (when using the built-in divergence minimizers). For this, `project()` has gained a new argument `verbose` which can also be controlled via the global option `projpred.verbose_project`. By default, the new progress bar is activated. (GitHub: #421)
 * Added a new argument `parallel` to `cv_varsel()`. With `parallel = TRUE`, costly parts of **projpred**'s cross-validation (CV) can be run in parallel. See the documentation of that new argument (and section "Note" of `cv_varsel()`'s documentation) for details. (GitHub: #422)
+* Added a warning for issue #323 (for multilevel Gaussian models, the projection onto the full model can be instable). (GitHub: #426)
+* `plot.vsel()`: The uncertainty bars are slightly thicker now and the points slightly larger. (GitHub: #429)
+* `plot.vsel()`: Added argument `ranking_colored` for coloring the points and the uncertainty bars according to the magnitude of the (possibly cumulated) CV ranking proportions. (GitHub: #430; thanks to @yannmclatchie for the suggestion)
+* Added warnings for most of the problems described in section ["Troubleshooting"](https://mc-stan.org/projpred/articles/projpred.html#troubleshooting) of the main vignette. (GitHub: #431)
+* Output element `p_type` of `project()` has been removed. Instead, output element `const_wdraws_prj` has been added, but its definition is essentially the inverse of former element `p_type` (see the updated documentation of `project()`'s output). This should not be a breaking change for users (as `p_type` was mainly intended for internal use and the new element `const_wdraws_prj` is so, too) but this slightly enhances the cases where `as.matrix.projection()` throws a warning concerning the weights of the projected draws and the cases where `proj_predict()` resamples from the projected draws using argument `nresample_clusters`. (GitHub: #432)
 
 ## Bug fixes
 
 * Fixed a bug in the printed number of projected draws for the performance evaluation when calling `print.vselsummary()` based on output from `varsel()` with `refit_prj = FALSE`.
 * Fixed a bug sometimes causing an error when predicting from a submodel that is a GLM and has interactions. (GitHub: #420)
+* Fixed a bug introduced in version 2.6.0, causing an incompatibility of K-fold CV with R versions < 4.2.0. (GitHub: #423, #427)
 
 # projpred 2.6.0
 
